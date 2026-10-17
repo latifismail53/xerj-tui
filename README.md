@@ -33,11 +33,13 @@ A terminal menu for using [XERJ](https://github.com/xerj-org/xerj) (a local sear
 
 ## Install
 
-Download the binary from [Releases](https://github.com/latifismail53/xerj-tui/releases), then run:
+No Rust needed. One line:
 
 ```bash
-./xerj-tui
+curl -fsSL https://raw.githubusercontent.com/latifismail53/xerj-tui/main/install.sh | sh
 ```
+
+This downloads the prebuilt binary for your platform (macOS Intel, macOS Apple Silicon, or Linux x86_64) into `~/.local/bin`. Make sure `~/.local/bin` is in your `PATH`.
 
 Or build it yourself (requires [Rust](https://sh.rustup.rs)):
 
