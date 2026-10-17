@@ -1,4 +1,4 @@
-//! xerj-tui library -- modul core/app/ui agar bisa di-integration-test.
+//! Library xerj-tui: modul core/app/ui agar bisa di-integration-test.
 
 pub mod app;
 pub mod core;

@@ -1,4 +1,4 @@
-//! app.rs -- state machine TUI: screen, menu, input, background task.
+//! State machine TUI: screen, menu, input, background task.
 
 use std::io::BufRead;
 use std::path::PathBuf;
@@ -7,9 +7,7 @@ use std::time::Duration;
 
 use crate::core;
 
-// ---------------------------------------------------------------------------
 // Model
-// ---------------------------------------------------------------------------
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum PromptKind {
@@ -60,7 +58,7 @@ pub enum Action {
     Quit,
 }
 
-/// Aksi yang mengubah sesuatu di luar TUI -- WAJIB lewat layar konfirmasi
+/// Aksi yang mengubah sesuatu di luar TUI WAJIB lewat layar konfirmasi
 /// dulu (prinsip keamanan: tidak ada aksi destruktif diam-diam).
 /// Setiap varian wajib menjelaskan "yang akan dilakukan" di summary_lines().
 #[derive(Clone)]
@@ -252,6 +250,12 @@ pub struct App {
     pending_title: String,
 }
 
+impl Default for App {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl App {
     pub fn new() -> Self {
         let mut app = App {
@@ -371,7 +375,7 @@ impl App {
                 }
             }
             KeyCode::Char('q') => return true,
-            KeyCode::Char(c) if ('0'..='9').contains(&c) => {
+            KeyCode::Char(c) if c.is_ascii_digit() => {
                 if let Some(item) = self.items.iter().find(|i| i.key == c) {
                     if item.enabled {
                         return self.activate(item.action);
@@ -545,9 +549,7 @@ impl App {
     }
 }
 
-// ---------------------------------------------------------------------------
 // Background task
-// ---------------------------------------------------------------------------
 
 #[derive(Clone)]
 enum TaskKind {
@@ -588,7 +590,8 @@ fn run_task(kind: TaskKind, tx: &mpsc::Sender<TaskEvent>) {
                     let mut err = child.stderr.take();
                     let tx2 = tx.clone();
                     let t = std::thread::spawn(move || {
-                        let mut buf = std::io::BufReader::new(out.take().unwrap());
+                        let Some(out) = out.take() else { return };
+                        let mut buf = std::io::BufReader::new(out);
                         let mut line = String::new();
                         while let Ok(n) = buf.read_line(&mut line) {
                             if n == 0 {
@@ -598,7 +601,12 @@ fn run_task(kind: TaskKind, tx: &mpsc::Sender<TaskEvent>) {
                             line.clear();
                         }
                     });
-                    let mut ebuf = std::io::BufReader::new(err.take().unwrap());
+                    let Some(err) = err.take() else {
+                        let _ = t.join();
+                        done_err("Gagal membaca output installer.".to_string());
+                        return;
+                    };
+                    let mut ebuf = std::io::BufReader::new(err);
                     let mut line = String::new();
                     while let Ok(n) = ebuf.read_line(&mut line) {
                         if n == 0 {
@@ -708,9 +716,7 @@ fn stream_xerj(
                 }
                 Ok(f) => {
                     if core::data_dir_inside(&f, &core::default_data_dir()) {
-                        let _ = tx.send(TaskEvent::Done(Err(format!(
-                            "Batal demi keamanan: folder data XERJ ada DI DALAM folder yang mau di-index.\nPindahkan data-dir keluar dulu (default: ~/xerj-data)."
-                        ))));
+                        let _ = tx.send(TaskEvent::Done(Err("Batal demi keamanan: folder data XERJ ada DI DALAM folder yang mau di-index.\nPindahkan data-dir keluar dulu (default: ~/xerj-data).".to_string())));
                         return;
                     }
                 }
@@ -734,7 +740,7 @@ fn stream_xerj(
             Ok(0) => break,
             Ok(_) => {
                 let t = line.trim_end().to_string();
-                // Saring baris log ANSI yang berantakan? Tidak -- tampilkan apa adanya,
+                // Saring baris log ANSI yang berantakan? Tidak, tampilkan apa adanya,
                 // tapi buang escape sequence kasar agar TUI tidak rusak.
                 let clean = strip_ansi(&t);
                 collected.push_str(&clean);
@@ -791,9 +797,7 @@ fn strip_ansi(s: &str) -> String {
     out
 }
 
-// ---------------------------------------------------------------------------
 // Menu
-// ---------------------------------------------------------------------------
 
 fn build_menu(st: &core::MenuStatus) -> Vec<MenuItem> {
     let mut items = Vec::new();
@@ -927,9 +931,7 @@ fn build_menu(st: &core::MenuStatus) -> Vec<MenuItem> {
     items
 }
 
-// ---------------------------------------------------------------------------
 // Prompt input (line editor sederhana)
-// ---------------------------------------------------------------------------
 
 use crossterm::event::{KeyCode, KeyModifiers};
 

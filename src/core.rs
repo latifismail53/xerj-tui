@@ -1,15 +1,15 @@
-//! core.rs -- logika murni xerj-tui (tanpa ratatui/crossterm).
+//! Logika murni xerj-tui (tanpa ratatui/crossterm).
 //!
 //! Semua deteksi, parsing, dan manajemen server XERJ ada di sini sehingga
 //! bisa di-unit-test. Format output yang di-parse didasarkan pada observasi
 //! nyata XERJ v1.0.0-rc.96 (bukan tebakan):
 //!   - `xerj --version`            -> "xerj v1.0.0-rc.96"
 //!   - startup server mencetak ringkasan:
-//!       Native REST  127.0.0.1:8080 [plain]
-//!       ES-compat    127.0.0.1:9200 [plain]
-//!       gRPC         127.0.0.1:8081 [h2c]
-//!       Data dir     <data_dir>
-//!       Xerj Console UI  http://localhost:9200/_xerj-console/
+//!     Native REST  127.0.0.1:8080 [plain]
+//!     ES-compat    127.0.0.1:9200 [plain]
+//!     gRPC         127.0.0.1:8081 [h2c]
+//!     Data dir     <data_dir>
+//!     Xerj Console UI  http://localhost:9200/_xerj-console/
 //!   - tanpa --insecure: API key ditulis ke <data_dir>/admin.key (mode 600),
 //!     health check tanpa key -> HTTP 401.
 //!   - `xerj autoindex` diakhiri baris "xerj-done ok=true exit=0 ..."
@@ -23,9 +23,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
-// ---------------------------------------------------------------------------
 // Konstanta
-// ---------------------------------------------------------------------------
 
 /// Health endpoint ES-compat (observasi: selalu 127.0.0.1:9200 [plain]).
 pub const HEALTH_URL: &str = "http://localhost:9200/_cluster/health";
@@ -38,15 +36,13 @@ pub const INSTALL_CMD: &str = "curl -fsSL https://xerj.org/get | sh";
 /// Label LaunchAgent macOS.
 pub const LAUNCH_AGENT_LABEL: &str = "org.xerj.tui";
 
-// ---------------------------------------------------------------------------
 // Path
-// ---------------------------------------------------------------------------
 
 pub fn home_dir() -> PathBuf {
     env::var("HOME").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from("."))
 }
 
-/// ~/.xerj-tui -- semua state TUI (pid, state.json, log).
+/// ~/.xerj-tui: semua state TUI (pid, state.json, log).
 pub fn app_dir() -> PathBuf {
     home_dir().join(".xerj-tui")
 }
@@ -72,9 +68,7 @@ pub fn launch_agent_path() -> PathBuf {
     home_dir().join("Library/LaunchAgents/org.xerj.tui.plist")
 }
 
-// ---------------------------------------------------------------------------
 // Deteksi install & versi
-// ---------------------------------------------------------------------------
 
 /// Cari `xerj` di dalam PATH (diberikan eksplisit agar bisa di-test).
 pub fn find_xerj_in(path_env: &str) -> Option<PathBuf> {
@@ -110,17 +104,14 @@ pub fn find_xerj() -> Option<PathBuf> {
             return Some(f);
         }
     }
-    // Fallback: lokasi default installer resmi -- installer sendiri
+    // Fallback: lokasi default installer resmi. Installer sendiri
     // memperingatkan bahwa ~/.local/bin sering belum ada di PATH.
-    for cand in [
+    [
         home_dir().join(".local/bin/xerj"),
         PathBuf::from("/usr/local/bin/xerj"),
-    ] {
-        if is_executable(&cand) {
-            return Some(cand);
-        }
-    }
-    None
+    ]
+    .into_iter()
+    .find(|cand| is_executable(cand))
 }
 
 /// Parse output `xerj --version`.
@@ -155,9 +146,7 @@ pub fn xerj_version() -> Option<String> {
     parse_version(&text)
 }
 
-// ---------------------------------------------------------------------------
 // HTTP helper (ureq, std-only selain itu)
-// ---------------------------------------------------------------------------
 
 fn http_get(url: &str, api_key: Option<&str>) -> Result<(u16, String), String> {
     let mut req = ureq::get(url).timeout(Duration::from_secs(4));
@@ -228,9 +217,7 @@ fn http_post_smart(url: &str, body: &str, data_dir: Option<&Path>) -> Result<(u1
     Ok((code, resp))
 }
 
-// ---------------------------------------------------------------------------
 // PID & status server
-// ---------------------------------------------------------------------------
 
 pub fn read_pid(p: &Path) -> Option<u32> {
     fs::read_to_string(p).ok()?.trim().parse().ok()
@@ -342,9 +329,7 @@ pub fn ensure_pid_recorded(pid_file: &Path, health_url: &str) -> Option<u32> {
     None
 }
 
-// ---------------------------------------------------------------------------
-// State (state.json) -- ingat data_dir & mode server yang kita jalankan
-// ---------------------------------------------------------------------------
+// State (state.json): ingat data_dir dan mode server yang kita jalankan
 
 #[derive(Debug, Clone, Default)]
 pub struct ServerState {
@@ -399,9 +384,7 @@ pub fn read_admin_key(data_dir: &Path) -> Option<String> {
     }
 }
 
-// ---------------------------------------------------------------------------
 // Start / stop server
-// ---------------------------------------------------------------------------
 
 pub fn start_server_with(
     data_dir: &Path,
@@ -533,9 +516,7 @@ pub fn stop_server() -> Result<String, String> {
     stop_server_with(&pid_file())
 }
 
-// ---------------------------------------------------------------------------
 // Menjalankan perintah xerj
-// ---------------------------------------------------------------------------
 
 /// Jalankan `xerj <args>` dengan timeout. Kembalikan (exit_code, output).
 pub fn run_xerj(args: &[&str], cwd: Option<&Path>, timeout: Duration) -> Result<(i32, String), String> {
@@ -585,7 +566,7 @@ pub fn run_xerj(args: &[&str], cwd: Option<&Path>, timeout: Duration) -> Result<
     let mut text = t_out.join().unwrap_or_default();
     let err = t_err.join().unwrap_or_default();
     if !err.trim().is_empty() {
-        text.push_str("\n");
+        text.push('\n');
         text.push_str(err.trim());
     }
     Ok((status.code().unwrap_or(-1), text.trim().to_string()))
@@ -617,9 +598,7 @@ pub fn spawn_xerj(args: &[String], cwd: Option<&Path>) -> Result<XerjProc, Strin
     })
 }
 
-// ---------------------------------------------------------------------------
 // Validasi input
-// ---------------------------------------------------------------------------
 
 pub fn validate_folder(path: &str) -> Result<PathBuf, String> {
     let p = shellexpand(path);
@@ -684,9 +663,7 @@ fn normalize(p: &Path) -> PathBuf {
     out
 }
 
-// ---------------------------------------------------------------------------
 // Fitur: autoindex, init, search, def, gain
-// ---------------------------------------------------------------------------
 
 pub fn autoindex(folder: &str, data_dir: &Path) -> Result<String, String> {
     let folder = validate_folder(folder)?;
@@ -790,9 +767,7 @@ pub fn feedback_dry_run() -> Result<String, String> {
     })
 }
 
-// ---------------------------------------------------------------------------
 // Install XERJ (installer resmi)
-// ---------------------------------------------------------------------------
 
 pub fn install_cmd() -> String {
     env::var("XERJ_TUI_INSTALL_CMD").unwrap_or_else(|_| INSTALL_CMD.to_string())
@@ -811,7 +786,7 @@ pub fn install_xerj_blocking() -> Result<String, String> {
     let mut text = String::from_utf8_lossy(&out.stdout).into_owned();
     let err = String::from_utf8_lossy(&out.stderr);
     if !err.trim().is_empty() {
-        text.push_str("\n");
+        text.push('\n');
         text.push_str(err.trim());
     }
     if !out.status.success() {
@@ -832,9 +807,7 @@ fn find_in_path(name: &str) -> Option<PathBuf> {
     })
 }
 
-// ---------------------------------------------------------------------------
-// Kartu Status XERJ -- merapikan output xerj yang berantakan
-// ---------------------------------------------------------------------------
+// Kartu Status XERJ: merapikan output xerj yang berantakan
 
 #[derive(Debug, Clone)]
 pub enum ApiKeyInfo {
@@ -959,9 +932,7 @@ pub fn status_card() -> StatusCard {
     }
 }
 
-// ---------------------------------------------------------------------------
 // Status ringkas untuk menu
-// ---------------------------------------------------------------------------
 
 pub struct MenuStatus {
     pub installed: bool,
@@ -985,9 +956,7 @@ pub fn menu_status() -> MenuStatus {
     }
 }
 
-// ---------------------------------------------------------------------------
 // Auto-start saat login (macOS LaunchAgent)
-// ---------------------------------------------------------------------------
 
 pub fn build_plist(xerj_path: &Path, data_dir: &Path, log_path: &Path) -> String {
     format!(
@@ -1028,13 +997,14 @@ pub fn autostart_enabled() -> bool {
     }
 }
 
+#[cfg(not(target_os = "macos"))]
 pub fn set_autostart(enable: bool) -> Result<String, String> {
-    #[cfg(not(target_os = "macos"))]
-    {
-        let _ = enable;
-        return Err("Auto-start saat ini hanya didukung di macOS.\nDi Linux: belum didukung -- jalankan server manual dari menu 'Start server' ya.".into());
-    }
-    #[cfg(target_os = "macos")]
+    let _ = enable;
+    Err("Auto-start saat ini hanya didukung di macOS.\nDi Linux: belum didukung. Jalankan server manual dari menu 'Start server' ya.".into())
+}
+
+#[cfg(target_os = "macos")]
+pub fn set_autostart(enable: bool) -> Result<String, String> {
     {
         let path = launch_agent_path();
         if enable {
@@ -1055,7 +1025,7 @@ pub fn set_autostart(enable: bool) -> Result<String, String> {
                 .map(|o| o.status.code().unwrap_or(-1))
                 .unwrap_or(-1);
             if rc != 0 {
-                return Err("File auto-start sudah ditulis, tapi 'launchctl load' gagal.\nCoba restart Mac kamu -- biasanya langsung aktif setelah itu.".into());
+                return Err("File auto-start sudah ditulis, tapi 'launchctl load' gagal.\nCoba restart Mac kamu. Biasanya langsung aktif setelah itu.".into());
             }
             Ok(format!(
                 "Auto-start AKTIF. Server XERJ akan jalan sendiri tiap kamu login.\nFile: {}",
@@ -1069,9 +1039,7 @@ pub fn set_autostart(enable: bool) -> Result<String, String> {
     }
 }
 
-// ---------------------------------------------------------------------------
 // Unit test
-// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -1101,10 +1069,10 @@ mod tests {
     #[test]
     fn data_dir_inside_detects_nesting() {
         let folder = Path::new("/home/u/proj");
-        assert!(data_dir_inside(folder, &Path::new("/home/u/proj/xerj-data")));
-        assert!(data_dir_inside(folder, &Path::new("/home/u/proj")));
-        assert!(!data_dir_inside(folder, &Path::new("/home/u/xerj-data")));
-        assert!(!data_dir_inside(folder, &Path::new("/home/u/proj2/xerj-data")));
+        assert!(data_dir_inside(folder, Path::new("/home/u/proj/xerj-data")));
+        assert!(data_dir_inside(folder, Path::new("/home/u/proj")));
+        assert!(!data_dir_inside(folder, Path::new("/home/u/xerj-data")));
+        assert!(!data_dir_inside(folder, Path::new("/home/u/proj2/xerj-data")));
     }
 
     #[test]

@@ -1,4 +1,4 @@
-//! main.rs -- entry point xerj-tui.
+//! Entry point xerj-tui.
 
 use std::time::Duration;
 

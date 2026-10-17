@@ -24,24 +24,22 @@ fn start_gated_health() -> (String, std::sync::Arc<std::sync::atomic::AtomicBool
     let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
     let port = listener.local_addr().unwrap().port();
     std::thread::spawn(move || {
-        for stream in listener.incoming() {
-            if let Ok(mut s) = stream {
-                let mut buf = [0u8; 2048];
-                let _ = s.read(&mut buf); // abaikan isi request
-                let (code, reason, body) = if up_srv.load(Ordering::SeqCst) {
-                    (200, "OK", r#"{"status":"green"}"#)
-                } else {
-                    (503, "Service Unavailable", r#"{"status":"red"}"#)
-                };
-                let resp = format!(
-                    "HTTP/1.1 {} {}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
-                    code,
-                    reason,
-                    body.len(),
-                    body
-                );
-                let _ = s.write_all(resp.as_bytes());
-            }
+        for mut s in listener.incoming().flatten() {
+            let mut buf = [0u8; 2048];
+            let _ = s.read(&mut buf); // abaikan isi request
+            let (code, reason, body) = if up_srv.load(Ordering::SeqCst) {
+                (200, "OK", r#"{"status":"green"}"#)
+            } else {
+                (503, "Service Unavailable", r#"{"status":"red"}"#)
+            };
+            let resp = format!(
+                "HTTP/1.1 {} {}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                code,
+                reason,
+                body.len(),
+                body
+            );
+            let _ = s.write_all(resp.as_bytes());
         }
     });
     // Buka gate setelah 1 detik: mensimulasikan server selesai boot.

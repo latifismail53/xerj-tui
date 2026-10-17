@@ -1,8 +1,8 @@
 # xerj-tui
 
-> **Disclaimer:** xerj-tui adalah tool komunitas yang **tidak resmi** dan tidak berafiliasi dengan [xerj-org](https://github.com/xerj-org/xerj). XERJ berlisensi [Apache-2.0](https://github.com/xerj-org/xerj/blob/main/LICENSE).
+> **Disclaimer:** xerj-tui is an **unofficial** community tool, not affiliated with or endorsed by [xerj-org](https://github.com/xerj-org/xerj). XERJ is licensed under [Apache-2.0](https://github.com/xerj-org/xerj/blob/main/LICENSE).
 
-Menu terminal untuk memakai [XERJ](https://github.com/xerj-org/xerj) (mesin pencari lokal untuk AI coding agent) tanpa menghafal perintah.
+A terminal menu for using [XERJ](https://github.com/xerj-org/xerj) (a local search engine for AI coding agents) without memorizing commands.
 
 ```
  xerj-tui, pendamping ramah untuk XERJ
@@ -33,65 +33,65 @@ Menu terminal untuk memakai [XERJ](https://github.com/xerj-org/xerj) (mesin penc
 
 ## Install
 
-Download binary dari [Releases](https://github.com/latifismail53/xerj-tui/releases), lalu jalankan:
+Download the binary from [Releases](https://github.com/latifismail53/xerj-tui/releases), then run:
 
 ```bash
 ./xerj-tui
 ```
 
-Atau build sendiri (butuh [Rust](https://sh.rustup.rs)):
+Or build it yourself (requires [Rust](https://sh.rustup.rs)):
 
 ```bash
 cargo build --release
-./target/release/xerj-tui   # satu binary ±3 MB, tanpa runtime dependency
+./target/release/xerj-tui   # single ~3 MB binary, no runtime dependencies
 ```
 
-Butuh: macOS atau Linux, terminal minimal 80x24.
+Requires macOS or Linux, and a terminal at least 80x24.
 
-## Cara pakai
+## Usage
 
-1. **Install XERJ** (menu 1) — menjalankan installer resmi.
-2. **Start server** (menu 2) — jalan di `http://localhost:9200`.
-3. **Index project** (menu 3) — paste path folder, Enter.
-4. **Init project** (menu 4) — menulis `.mcp.json` + skill di folder project agar Claude Code/Cursor bisa memakai XERJ.
+1. **Install XERJ** (menu 1) — runs the official installer.
+2. **Start server** (menu 2) — serves at `http://localhost:9200`.
+3. **Index project** (menu 3) — paste the folder path, press Enter.
+4. **Init project** (menu 4) — writes `.mcp.json` + skill files into the project folder so Claude Code/Cursor can use XERJ.
 
-## Fitur
+## Features
 
-- Deteksi otomatis: kalau `xerj` sudah terinstall, menu install nonaktif dan versinya ditampilkan.
-- Panel status: versi, URL server/console, lokasi API key, data-dir, dan daftar korpus ter-index dalam satu kartu.
-- Start/stop server sekali klik, plus auto-start saat login (macOS).
-- Cari kode, go-to-definition, dan statistik pemakaian dari dalam menu.
-- Semua aksi yang mengubah sesuatu meminta konfirmasi dulu.
-- Menu opsional: kirim field report ke komunitas XERJ.
+- Automatic detection: if `xerj` is already installed, the install menu is disabled and the version is shown.
+- Status card: version, server/console URLs, API key location, data dir, and indexed corpora in one view.
+- One-click server start/stop, plus start-on-login (macOS).
+- Code search, go-to-definition, and usage statistics from the menu.
+- Every mutating action asks for confirmation first.
+- Optional: send a field report to the XERJ community.
 
-## Struktur kode
+## Code layout
 
 ```
 src/
 ├── main.rs   # entry point
-├── core.rs   # logika: deteksi, parsing, manajemen server, perintah xerj
-├── app.rs    # state machine + layar konfirmasi
-└── ui.rs     # rendering ratatui
+├── core.rs   # logic: detection, parsing, server management, xerj commands
+├── app.rs    # state machine + confirmation screens
+└── ui.rs     # ratatui rendering
 ```
 
-## Keamanan
+## Security
 
-- Tidak memodifikasi binary, data, atau key XERJ. Tidak ada menu hapus/reset.
-- File milik TUI hanya di `~/.xerj-tui/` (PID server, state, log).
-- Server jalan dengan `--insecure` (tanpa TLS/auth), hanya bind `127.0.0.1`, sesuai rekomendasi XERJ untuk pemakaian pribadi di laptop sendiri.
-- Data-dir default `~/xerj-data`, selalu di luar folder yang di-index.
+- Never modifies the XERJ binary, data, or keys. No delete/reset menu exists.
+- TUI-owned files live only in `~/.xerj-tui/` (server PID, state, logs).
+- The server runs with `--insecure` (no TLS/auth), bound to `127.0.0.1` only, as recommended by XERJ for single-user laptop use.
+- Default data dir is `~/xerj-data`, always outside indexed folders.
 
 ## FAQ
 
-**Apakah dataku dikirim ke mana-mana?**
-Tidak. XERJ jalan 100% lokal.
+**Is my data sent anywhere?**
+No. XERJ runs 100% locally.
 
-**Server tidak mau start?**
-Pastikan port 9200 tidak dipakai aplikasi lain. Cek log di `~/.xerj-tui/xerj-server.log`.
+**The server won't start?**
+Make sure port 9200 is free. Check the log at `~/.xerj-tui/xerj-server.log`.
 
-**Cara update XERJ ke versi baru?**
-Jalankan ulang menu Install.
+**How do I update XERJ?**
+Re-run the Install menu.
 
-## Lisensi
+## License
 
-MIT — lihat [LICENSE](LICENSE). Repo ini bukan fork XERJ dan tidak membundel binary XERJ; instalasi selalu via installer resmi.
+MIT — see [LICENSE](LICENSE). This repo is not a fork of XERJ and does not bundle the XERJ binary; installation always uses the official installer.

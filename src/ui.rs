@@ -1,4 +1,4 @@
-//! ui.rs -- rendering ratatui. Tema: gelap, rapi, satu aksen (cyan).
+//! Rendering ratatui. Tema: gelap, rapi, satu aksen (cyan).
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -11,15 +11,13 @@ use ratatui::{
 use crate::app::{App, PendingAction, PromptKind, Screen};
 use crate::core::{ApiKeyInfo, StatusCard};
 
-// ---------------------------------------------------------------------------
 // Palet (prinsip antislop-ui):
 //   - Netral: teks terang (White/Gray) di atas background gelap terminal.
-//   - DIM (DarkGray): border & label sekunder -- bukan dekorasi warna.
+//   - DIM (DarkGray): border dan label sekunder, bukan dekorasi warna.
 //   - AKSEN cyan: HANYA untuk elemen yang sedang fokus/dipilih
 //     (marker menu terpilih, border popup modal). Satu momen aksen.
 //   - Warna semantik HANYA untuk state nyata:
 //       hijau = OK/jalan, merah = error, kuning = peringatan.
-// ---------------------------------------------------------------------------
 const ACCENT: Color = Color::Cyan;
 const OK: Color = Color::Green;
 const ERR: Color = Color::Red;
@@ -157,9 +155,7 @@ fn render_footer(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(p, area);
 }
 
-// ---------------------------------------------------------------------------
 // Layar menu: kartu status + daftar menu
-// ---------------------------------------------------------------------------
 
 fn render_menu_screen(f: &mut Frame, area: Rect, app: &mut App) {
     // Kartu status kompak (8 baris) + menu scrollable mengisi sisa.
@@ -357,9 +353,7 @@ fn render_menu_list(f: &mut Frame, area: Rect, app: &mut App) {
     f.render_widget(list, area);
 }
 
-// ---------------------------------------------------------------------------
 // Popup, busy, output, message
-// ---------------------------------------------------------------------------
 
 fn centered_popup(area: Rect, w: u16, h: u16) -> Rect {
     let x = area.x + area.width.saturating_sub(w) / 2;
