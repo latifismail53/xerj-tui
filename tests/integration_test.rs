@@ -89,7 +89,7 @@ fn full_flow_with_shim() {
     let state_file = base.join("state.json");
     let log_file = base.join("server.log");
     let st0 = core::server_status_with(&pid_file, &health_url);
-    assert!(!st0.healthy, "gate masih tertutup, harusnya belum healthy");
+    assert!(!st0.healthy, "gate still closed, should not be healthy yet");
 
     let pid = core::start_server_with(&data_dir, &pid_file, &state_file, &log_file, &health_url)
         .expect("start_server_with");
@@ -109,7 +109,7 @@ fn full_flow_with_shim() {
     let pid2 =
         core::start_server_with(&data_dir, &pid_file, &state_file, &log_file, &health_url)
             .expect("start kedua");
-    assert_eq!(pid2, pid, "server sudah jalan: jangan start dua kali");
+    assert_eq!(pid2, pid, "server already running: must not start twice");
 
     // 5. Autoindex project.
     let proj = base.join("proj");
@@ -124,20 +124,20 @@ fn full_flow_with_shim() {
     assert!(proj.join(".mcp.json").exists());
 
     // 7. Search / def / gain.
-    let out = core::search_code("fungsi login").expect("search");
-    assert!(out.contains("hasil search"));
+    let out = core::search_code("login function").expect("search");
+    assert!(out.contains("search results"));
     let out = core::def_symbol("hitung_total").expect("def");
     assert!(out.contains("hitung_total"));
     let out = core::gain_stats().expect("gain");
     assert!(out.contains("gain:"));
 
-    // 7b. Feedback dry-run (tidak mengirim apa-apa).
+    // 7b. Feedback dry-run (sends nothing).
     let out = core::feedback_dry_run().expect("feedback");
     assert!(out.contains("dry-run"));
 
     // 8. Stop server.
     let msg = core::stop_server_with(&pid_file).expect("stop");
-    assert!(msg.contains("berhenti"));
+    assert!(msg.contains("stopped"));
     assert!(!pid_file.exists());
     assert!(!core::pid_alive(pid));
 

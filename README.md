@@ -5,30 +5,30 @@
 A terminal menu for using [XERJ](https://github.com/xerj-org/xerj) (a local search engine for AI coding agents) without memorizing commands.
 
 ```
- xerj-tui, pendamping ramah untuk XERJ
+ xerj-tui, a friendly companion for XERJ
 ────────────────────────────────────────────────────────────────────────────────
-┌ Status XERJ ─────────────────────────────────────────────────────────────────┐
-│ versi   v1.0.0-rc.96      status ○ MATI                                      │
+┌ XERJ Status ─────────────────────────────────────────────────────────────────┐
+│ version v1.0.0-rc.96      status ○ STOPPED                                   │
 │  api     http://localhost:9200                                               │
 │  console http://localhost:9200/_xerj-console/                                │
-│  api key tidak diketahui                                                     │
+│  api key unknown                                                             │
 │  data    -                                                                   │
-│ korpus  -                                                                    │
+│ corpora -                                                                    │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Menu ────────────────────────────────────────────────────────────────────────┐
-│  1  Install XERJ   [v1.0.0-rc.96 terinstall]  ✓                              │
+│  1  Install XERJ   [v1.0.0-rc.96 installed]                                  │
 │› 2  Start server                                                             │
-│  3  Index project   (butuh XERJ + server jalan)                              │
-│  4  Init project untuk AI agent                                              │
-│  5  Cari kode   (butuh XERJ + server jalan)                                  │
-│  6  Go-to-definition   (butuh XERJ + server jalan)                           │
-│  7  Statistik (xerj gain)   (butuh XERJ + server jalan)                      │
-│  8  Auto-start saat login   (hanya macOS)                                    │
-│  0  Kirim field report ke komunitas XERJ                                     │
-│  9  Keluar                                                                   │
+│  3  Index project   (needs XERJ + running server)                            │
+│  4  Init project for AI agent                                                │
+│  5  Search code   (needs XERJ + running server)                              │
+│  6  Go-to-definition   (needs XERJ + running server)                         │
+│  7  Statistics (xerj gain)   (needs XERJ + running server)                   │
+│  8  Auto-start at login   (macOS only)                                       │
+│  0  Send field report to the XERJ community                                  │
+│  9  Quit                                                                     │
 └──────────────────────────────────────────────────────────────────────────────┘
 ────────────────────────────────────────────────────────────────────────────────
-       ↑↓ pilih · Enter jalankan · 0-9 jalan pintas · r refresh · q keluar
+           ↑↓ select · Enter run · 0-9 shortcuts · r refresh · q quit
 ```
 
 ## Install

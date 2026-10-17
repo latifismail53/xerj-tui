@@ -126,7 +126,7 @@ pub fn render(f: &mut Frame, app: &mut App) {
 fn render_header(f: &mut Frame, area: Rect) {
     let title = Line::from(vec![
         Span::styled(" xerj-tui", title_style()),
-        Span::styled(", pendamping ramah untuk XERJ", dim()),
+        Span::styled(", a friendly companion for XERJ", dim()),
     ]);
     let block = Block::default()
         .borders(Borders::BOTTOM)
@@ -138,12 +138,12 @@ fn render_header(f: &mut Frame, area: Rect) {
 
 fn render_footer(f: &mut Frame, area: Rect, app: &App) {
     let hints = match &app.screen {
-        Screen::Menu => "↑↓ pilih · Enter jalankan · 0-9 jalan pintas · r refresh · q keluar",
-        Screen::Prompt { .. } => "ketik lalu Enter · Esc batal",
-        Screen::Confirm { .. } => "Enter = lanjutkan · Esc = batal",
-        Screen::Busy { .. } => "perintah berjalan, mohon tunggu...",
-        Screen::Output { .. } => "↑↓/PgUp/PgDn scroll · q kembali",
-        Screen::Message { .. } => "tekan tombol apa saja untuk kembali",
+        Screen::Menu => "↑↓ select · Enter run · 0-9 shortcuts · r refresh · q quit",
+        Screen::Prompt { .. } => "type, then Enter · Esc cancel",
+        Screen::Confirm { .. } => "Enter = continue · Esc = cancel",
+        Screen::Busy { .. } => "command running, please wait...",
+        Screen::Output { .. } => "↑↓/PgUp/PgDn scroll · q back",
+        Screen::Message { .. } => "press any key to go back",
     };
     let p = Paragraph::new(Line::from(Span::styled(hints, dim())))
         .block(
@@ -180,7 +180,7 @@ fn render_status_card(f: &mut Frame, area: Rect, card: &StatusCard) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_style(border_neutral())
-        .title(Span::styled(" Status XERJ ", title_style()))
+        .title(Span::styled(" XERJ Status ", title_style()))
         .title_alignment(Alignment::Left);
     let inner = block.inner(area);
     f.render_widget(block, area);
@@ -193,15 +193,15 @@ fn render_status_card(f: &mut Frame, area: Rect, card: &StatusCard) {
         .version
         .as_deref()
         .map(|v| format!("v{}", v))
-        .unwrap_or_else(|| "belum terinstall".into());
+        .unwrap_or_else(|| "not installed".into());
     let mut l1 = vec![
-        Span::styled(" versi   ", dim()),
+        Span::styled(" version ", dim()),
         Span::styled(ver, Style::default().fg(TEXT)),
         Span::styled("      status ", dim()),
     ];
     if card.running {
         l1.push(Span::styled(
-            "● JALAN",
+            "● RUNNING",
             Style::default().fg(OK).add_modifier(Modifier::BOLD),
         ));
         if let Some(pid) = card.pid {
@@ -209,7 +209,7 @@ fn render_status_card(f: &mut Frame, area: Rect, card: &StatusCard) {
         }
     } else {
         l1.push(Span::styled(
-            "○ MATI",
+            "○ STOPPED",
             Style::default().fg(DIM).add_modifier(Modifier::BOLD),
         ));
     }
@@ -234,10 +234,10 @@ fn render_status_card(f: &mut Frame, area: Rect, card: &StatusCard) {
             Style::default().fg(OK),
         ),
         ApiKeyInfo::Missing(p) => (
-            format!("belum ada ({})", shorten(&p.display().to_string(), 36)),
+            format!("none ({})", shorten(&p.display().to_string(), 36)),
             Style::default().fg(WARN),
         ),
-        ApiKeyInfo::Unknown => ("tidak diketahui".to_string(), dim()),
+        ApiKeyInfo::Unknown => ("unknown".to_string(), dim()),
     };
     rows.push(kv(" api key", key_txt, key_style));
 
@@ -255,21 +255,21 @@ fn render_status_card(f: &mut Frame, area: Rect, card: &StatusCard) {
     let korpus = if !card.running {
         "-".to_string()
     } else if card.corpora.is_empty() {
-        "Belum ada project ter-index \u{2014} pilih menu 'Index project' untuk mulai.".to_string()
+        "No projects indexed yet. Use 'Index project' to start.".to_string()
     } else {
         let parts: Vec<String> = card
             .corpora
             .iter()
             .map(|c| match (c.records, c.files) {
-                (Some(r), Some(fl)) => format!("{} ({} rek, {} file)", c.index, r, fl),
-                (Some(r), None) => format!("{} ({} rek)", c.index, r),
+                (Some(r), Some(fl)) => format!("{} ({} recs, {} files)", c.index, r, fl),
+                (Some(r), None) => format!("{} ({} recs)", c.index, r),
                 _ => c.index.clone(),
             })
             .collect();
         parts.join(", ")
     };
     let mut korpus_line = vec![
-        Span::styled(" korpus  ", dim()),
+        Span::styled(" corpora ", dim()),
         Span::styled(
             shorten(&korpus, width.saturating_sub(12)),
             Style::default().fg(TEXT),
@@ -427,11 +427,11 @@ fn render_confirm_popup(f: &mut Frame, area: Rect, action: &PendingAction) {
         .borders(Borders::ALL)
         .border_style(border_focus())
         .title(Span::styled(
-            format!(" Konfirmasi: {} ", action.title()),
+            format!(" Confirm: {} ", action.title()),
             title_style(),
         ))
         .title_bottom(Line::from(Span::styled(
-            " Enter = lanjutkan · Esc = batal ",
+            " Enter = continue · Esc = cancel ",
             Style::default().fg(ACCENT),
         )));
     let inner = block.inner(popup);
@@ -441,7 +441,7 @@ fn render_confirm_popup(f: &mut Frame, area: Rect, action: &PendingAction) {
         .map(|l| {
             // Netral semua; warna semantik hanya untuk state nyata,
             // bukan untuk dekorasi daftar.
-            let style = if l == "Yang akan dilakukan:" {
+            let style = if l == "What will happen:" {
                 Style::default().fg(TITLE).add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(TEXT)
@@ -475,7 +475,7 @@ fn render_scrollable(f: &mut Frame, area: Rect, title: &str, lines: &[String], s
         .border_style(border_neutral())
         .title(Span::styled(format!(" {} ", title), title_style()))
         .title_bottom(Line::from(Span::styled(
-            format!(" baris {}/{} ", scroll + 1, lines.len().max(1)),
+            format!(" line {}/{} ", scroll + 1, lines.len().max(1)),
             dim(),
         )));
     let inner = block.inner(area);
@@ -495,8 +495,8 @@ fn render_message(f: &mut Frame, area: Rect, title: &str, lines: &[String]) {
     let h = (lines.len() as u16 + 6).min(area.height.saturating_sub(2)).max(7);
     let popup = centered_popup(area, w, h);
     f.render_widget(Clear, popup);
-    // Merah HANYA untuk state error nyata ("Gagal"), bukan dekorasi.
-    let title_style = if title == "Gagal" {
+    // Red ONLY for a real error state ("Failed"), not decoration.
+    let title_style = if title == "Failed" {
         Style::default().fg(ERR).add_modifier(Modifier::BOLD)
     } else {
         title_style()

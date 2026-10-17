@@ -1,29 +1,29 @@
 #!/usr/bin/env bash
-# Fake `xerj` untuk integration test.
-# Meniru perilaku yang dipakai core, TANPA install XERJ asli.
+# Fake `xerj` for integration tests.
+# Mimics the behavior core relies on, WITHOUT installing real XERJ.
 set -u
 case "${1:-}" in
   --version)
-    # Format persis seperti aslinya: "xerj v<versi>"
+    # Exact format as the real one: "xerj v<version>"
     echo "xerj v9.9.9-test"
     ;;
   --insecure)
-    # Berpura-pura jadi server: proses tetap hidup supaya PID valid.
+    # Pretends to be a server: process stays alive so the PID is valid.
     exec sleep 600
     ;;
   autoindex)
     echo "xerj-done ok=true exit=0 reason=completed wall=0.1s files=1 records=2 datasets=1"
     ;;
   init)
-    echo "init OK: .mcp.json + skill ditulis"
+    echo "init OK: .mcp.json + skill written"
     touch .mcp.json
     ;;
   search)
-    echo "hasil search untuk: $2"
-    echo "src/a.php:1 potongan kode yang cocok..."
+    echo "search results for: $2"
+    echo "src/a.php:1 matching code snippet..."
     ;;
   def)
-    echo "definisi $2 -> src/a.php:1 (function $2)"
+    echo "definition $2 -> src/a.php:1 (function $2)"
     ;;
   gain)
     echo "gain: 3 searches, hit rate 100%"
@@ -32,7 +32,7 @@ case "${1:-}" in
     echo "field report draft (dry-run): nothing sent"
     ;;
   *)
-    echo "shim: perintah tak dikenal: ${1:-<kosong>}" >&2
+    echo "shim: unknown command: ${1:-<empty>}" >&2
     exit 1
     ;;
 esac

@@ -21,25 +21,25 @@ impl PromptKind {
     pub fn title(&self) -> &'static str {
         match self {
             PromptKind::IndexPath => "Index project",
-            PromptKind::InitPath => "Init project untuk AI agent",
-            PromptKind::SearchQuery => "Cari kode",
+            PromptKind::InitPath => "Init project for AI agent",
+            PromptKind::SearchQuery => "Search code",
             PromptKind::DefSymbol => "Go-to-definition",
         }
     }
     pub fn label(&self) -> &'static str {
         match self {
-            PromptKind::IndexPath => "Paste path folder project:",
-            PromptKind::InitPath => "Paste path folder project:",
+            PromptKind::IndexPath => "Paste project folder path:",
+            PromptKind::InitPath => "Paste project folder path:",
             PromptKind::SearchQuery => "Query pencarian:",
             PromptKind::DefSymbol => "Nama fungsi/simbol:",
         }
     }
     pub fn hint(&self) -> &'static str {
         match self {
-            PromptKind::IndexPath => "cth: ~/Development/erpv2   (Enter: jalan, Esc: batal)",
-            PromptKind::InitPath => "cth: ~/Development/erpv2   (Enter: jalan, Esc: batal)",
-            PromptKind::SearchQuery => "cth: fungsi hitung total   (Enter: cari, Esc: batal)",
-            PromptKind::DefSymbol => "cth: hitung_total   (Enter: cari, Esc: batal)",
+            PromptKind::IndexPath => "e.g. ~/Development/erpv2   (Enter: run, Esc: cancel)",
+            PromptKind::InitPath => "e.g. ~/Development/erpv2   (Enter: run, Esc: cancel)",
+            PromptKind::SearchQuery => "e.g. calculate_total function   (Enter: search, Esc: cancel)",
+            PromptKind::DefSymbol => "e.g. calculate_total   (Enter: search, Esc: cancel)",
         }
     }
 }
@@ -79,10 +79,10 @@ impl PendingAction {
             PendingAction::StartServer => "Start server",
             PendingAction::StopServer(_) => "Stop server",
             PendingAction::Autoindex(_) => "Index project",
-            PendingAction::InitProject(_) => "Init project untuk AI agent",
+            PendingAction::InitProject(_) => "Init project for AI agent",
             PendingAction::Autostart(true) => "Aktifkan auto-start",
-            PendingAction::Autostart(false) => "Matikan auto-start",
-            PendingAction::Feedback => "Kirim field report ke komunitas XERJ",
+            PendingAction::Autostart(false) => "Disable auto-start",
+            PendingAction::Feedback => "Send field report to the XERJ community",
         }
     }
 
@@ -90,105 +90,105 @@ impl PendingAction {
     pub fn summary_lines(&self) -> Vec<String> {
         match self {
             PendingAction::Install => vec![
-                "Yang akan dilakukan:",
+                "What will happen:",
                 "",
-                "· Menjalankan installer RESMI XERJ:",
+                "· Runs the OFFICIAL XERJ installer:",
                 "    curl -fsSL https://xerj.org/get | sh",
                 "",
-                "· Mengunduh satu binary `xerj` ke ~/.local/bin.",
-                "· Tidak mengubah file project apapun.",
-                "· Tidak mem-patch/memodifikasi binary atau system lain.",
+                "· Downloads a single `xerj` binary to ~/.local/bin.",
+                "· Does not touch any project files.",
+                "· Does not patch or modify the binary or anything else.",
             ]
             .into_iter()
             .map(String::from)
             .collect(),
             PendingAction::StartServer => vec![
-                "Yang akan dilakukan:",
+                "What will happen:",
                 "",
-                "· Menjalankan: xerj --insecure --data-dir ~/xerj-data",
-                "  sebagai proses background.",
+                "· Runs: xerj --insecure --data-dir ~/xerj-data",
+                "  as a background process.",
                 "",
-                "· Mode --insecure = TANPA TLS & TANPA API key.",
-                "  Aman hanya untuk satu pengguna di laptop sendiri",
-                "  (server hanya bind 127.0.0.1, sesuai security model XERJ).",
+                "· --insecure mode = NO TLS and NO API key.",
+                "  Safe only for a single user on their own laptop",
+                "  (server binds 127.0.0.1 only, per XERJ's security model).",
                 "",
-                "· PID dicatat di ~/.xerj-tui/server.pid (file milik TUI).",
-                "· File internal XERJ tidak diutak-atik.",
+                "· PID is recorded in ~/.xerj-tui/server.pid (TUI-owned file).",
+                "· XERJ's internal files are not touched.",
             ]
             .into_iter()
             .map(String::from)
             .collect(),
             PendingAction::StopServer(pid) => vec![
-                "Yang akan dilakukan:",
+                "What will happen:",
                 "",
                 &format!(
-                    "· Menghentikan proses server XERJ{}.",
+                    "· Stops the XERJ server process{}.",
                     pid.map(|p| format!(" (PID {})", p)).unwrap_or_default()
                 ),
-                "· Index & data di ~/xerj-data TETAP UTUH.",
-                "  Hanya prosesnya yang dimatikan.",
-                "· Tidak ada file XERJ yang dihapus.",
+                "· Index and data in ~/xerj-data REMAIN INTACT.",
+                "  Only the process is stopped.",
+                "· No XERJ files are deleted.",
             ]
             .into_iter()
             .map(|s: &str| s.to_string())
             .collect(),
             PendingAction::Autoindex(path) => vec![
-                "Yang akan dilakukan:",
+                "What will happen:",
                 "",
-                &format!("· Menjalankan: xerj autoindex {}", path),
-                "· File project hanya DIBACA. Tidak ada yang diubah.",
-                "· Index ditulis ke ~/xerj-data (data-dir milik TUI).",
-                "· Data/index XERJ yang sudah ada TIDAK dihapus.",
+                &format!("· Runs: xerj autoindex {}", path),
+                "· Project files are only READ. Nothing is modified.",
+                "· Index is written to ~/xerj-data (TUI-owned data dir).",
+                "· Existing XERJ data/indexes are NOT deleted.",
             ]
             .into_iter()
             .map(|s: &str| s.to_string())
             .collect(),
             PendingAction::InitProject(path) => vec![
-                "Yang akan dilakukan:",
+                "What will happen:",
                 "",
-                &format!("· Menjalankan: xerj init di {}", path),
-                "· Akan menulis/menggabungkan: .mcp.json dan AGENTS.md",
-                "  di folder project tersebut.",
-                "· File .mcp.json yang sudah ada di-backup menjadi",
-                "  .mcp.json.bak (perilaku resmi xerj, terverifikasi).",
-                "· Tidak ada file lain yang disentuh.",
+                &format!("· Runs: xerj init in {}", path),
+                "· Will write/merge: .mcp.json and AGENTS.md",
+                "  in that project folder.",
+                "· An existing .mcp.json is backed up as",
+                "  .mcp.json.bak (official xerj behavior, verified).",
+                "· No other files are touched.",
             ]
             .into_iter()
             .map(|s: &str| s.to_string())
             .collect(),
             PendingAction::Autostart(true) => vec![
-                "Yang akan dilakukan:",
+                "What will happen:",
                 "",
-                "· Menulis ~/Library/LaunchAgents/org.xerj.tui.plist",
-                "  (file milik TUI).",
-                "· Menjalankan: launchctl load. Server XERJ akan",
-                "  jalan otomatis tiap kamu login (macOS).",
+                "· Writes ~/Library/LaunchAgents/org.xerj.tui.plist",
+                "  (TUI-owned file).",
+                "· Runs: launchctl load. The XERJ server will",
+                "  start automatically at each login (macOS).",
             ]
             .into_iter()
             .map(String::from)
             .collect(),
             PendingAction::Autostart(false) => vec![
-                "Yang akan dilakukan:",
+                "What will happen:",
                 "",
-                "· Menjalankan: launchctl unload.",
-                "· Menghapus file plist milik TUI.",
-                "· Server tidak akan jalan otomatis lagi.",
+                "· Runs: launchctl unload.",
+                "· Deletes the TUI-owned plist file.",
+                "· The server will no longer start automatically.",
             ]
             .into_iter()
             .map(String::from)
             .collect(),
-            // Jujur: ini permintaan komunitas XERJ (tiket masuk komunitas),
-            // BUKAN kewajiban hukum. Mode --dry-run tidak mengirim apa-apa.
+            // Honest: this is a community request from XERJ (community entry ticket),
+            // NOT a legal obligation. The --dry-run mode sends nothing.
             PendingAction::Feedback => vec![
-                "Yang akan dilakukan:",
+                "What will happen:",
                 "",
-                "· Menjalankan: xerj feedback --dry-run",
-                "  (membuat DRAF laporan di layar, TIDAK mengirim).",
+                "· Runs: xerj feedback --dry-run",
+                "  (drafts the report on screen, does NOT send it).",
                 "",
-                "· Ini permintaan komunitas XERJ (tiket masuk komunitas),",
-                "  BUKAN kewajiban hukum. Bebas dilewati.",
+                "· This is a community request from XERJ (community entry ticket),",
+                "  NOT a legal obligation. Feel free to skip it.",
                 "",
-                "· Untuk mengirim beneran, jalankan manual di terminal:",
+                "· To actually send it, run manually in a terminal:",
                 "    xerj feedback --open-pr --verdict \"...\" --used-for \"...\"",
             ]
             .into_iter()
@@ -429,7 +429,7 @@ impl App {
             PendingAction::StopServer(_) => {
                 match core::stop_server() {
                     Ok(msg) => self.show_message("Stop server", &msg),
-                    Err(e) => self.show_message("Gagal", &e),
+                    Err(e) => self.show_message("Failed", &e),
                 }
                 self.refresh();
             }
@@ -447,7 +447,7 @@ impl App {
                 self.refresh();
             }
             PendingAction::Feedback => {
-                self.start_background("Field report (draf)", TaskKind::Feedback)
+                self.start_background("Field report (draft)", TaskKind::Feedback)
             }
         }
     }
@@ -472,7 +472,7 @@ impl App {
             // Search & def read-only -> langsung jalan.
             PromptKind::SearchQuery => {
                 let v = value.to_string();
-                self.start_background("Cari kode", TaskKind::Search(v));
+                self.start_background("Search code", TaskKind::Search(v));
             }
             PromptKind::DefSymbol => {
                 let v = value.to_string();
@@ -540,7 +540,7 @@ impl App {
                 }
                 Err(e) => {
                     self.screen = Screen::Message {
-                        title: "Gagal".into(),
+                        title: "Failed".into(),
                         lines: e.lines().map(|l| l.to_string()).collect(),
                     };
                 }
@@ -603,7 +603,7 @@ fn run_task(kind: TaskKind, tx: &mpsc::Sender<TaskEvent>) {
                     });
                     let Some(err) = err.take() else {
                         let _ = t.join();
-                        done_err("Gagal membaca output installer.".to_string());
+                        done_err("Failed to read installer output.".to_string());
                         return;
                     };
                     let mut ebuf = std::io::BufReader::new(err);
@@ -620,25 +620,25 @@ fn run_task(kind: TaskKind, tx: &mpsc::Sender<TaskEvent>) {
                         Ok(st) if st.success() => {
                             let v = core::xerj_version().unwrap_or_else(|| "?".into());
                             done_ok(format!(
-                                "Install selesai!\n\nXERJ v{} terinstall.\n\nLangkah berikutnya: 'Start server' dari menu.",
+                                "Install complete!\n\nXERJ v{} is installed.\n\nNext step: 'Start server' from the menu.",
                                 v
                             ));
                         }
                         Ok(st) => done_err(format!(
-                            "Installer gagal (kode {}).\nCek koneksi internet lalu coba lagi.",
+                            "Installer failed (code {}).\nCheck your internet connection and try again.",
                             st.code().unwrap_or(-1)
                         )),
-                        Err(e) => done_err(format!("Gagal menunggu installer: {}", e)),
+                        Err(e) => done_err(format!("Failed while waiting for the installer: {}", e)),
                     }
                 }
-                Err(e) => done_err(format!("Gagal menjalankan installer: {}", e)),
+                Err(e) => done_err(format!("Failed to run the installer: {}", e)),
             }
         }
         TaskKind::StartServer => {
-            send("menjalankan xerj --insecure --data-dir ~/xerj-data ...".into());
+            send("running xerj --insecure --data-dir ~/xerj-data ...".into());
             match core::start_server(&core::default_data_dir()) {
                 Ok(pid) => done_ok(format!(
-                    "Server XERJ jalan (PID {}).\n\nAPI     : {}\nConsole : {}\n\nCatatan: mode --insecure = tanpa TLS & tanpa API key.\nHanya untuk dipakai di laptop sendiri ya.",
+                    "XERJ server running (PID {}).\n\nAPI     : {}\nConsole : {}\n\nNote: --insecure mode means no TLS and no API key.\nOnly for use on your own laptop.",
                     pid,
                     core::SERVER_URL,
                     core::CONSOLE_URL
@@ -652,7 +652,7 @@ fn run_task(kind: TaskKind, tx: &mpsc::Sender<TaskEvent>) {
             stream_xerj(&args, None, tx, |out| {
                 // Validasi data-dir dilakukan di core; di sini cukup teruskan.
                 let _ = out;
-                Ok("Indexing selesai.".to_string())
+                Ok("Indexing complete.".to_string())
             });
         }
         TaskKind::Init(path) => {
@@ -664,12 +664,12 @@ fn run_task(kind: TaskKind, tx: &mpsc::Sender<TaskEvent>) {
                 }
             };
             stream_xerj(&["init".to_string()], Some(&cwd), tx, |_| {
-                Ok("Init selesai.\n\nFile .mcp.json + skill sudah ditulis di folder project.\nBuka project itu dengan AI agent kamu, dan dia bisa memakai XERJ.".to_string())
+                Ok("Init complete.\n\n.mcp.json + skill files have been written to the project folder.\nOpen that project with your AI agent, and it can use XERJ.".to_string())
             });
         }
         TaskKind::Search(q) => {
             if q.trim().is_empty() {
-                done_err("Query-nya kosong.".into());
+                done_err("Query is empty.".into());
                 return;
             }
             match core::search_code(&q) {
@@ -679,7 +679,7 @@ fn run_task(kind: TaskKind, tx: &mpsc::Sender<TaskEvent>) {
         }
         TaskKind::Def(s) => {
             if s.trim().is_empty() {
-                done_err("Nama simbolnya kosong.".into());
+                done_err("Symbol name is empty.".into());
                 return;
             }
             match core::def_symbol(&s) {
@@ -716,7 +716,7 @@ fn stream_xerj(
                 }
                 Ok(f) => {
                     if core::data_dir_inside(&f, &core::default_data_dir()) {
-                        let _ = tx.send(TaskEvent::Done(Err("Batal demi keamanan: folder data XERJ ada DI DALAM folder yang mau di-index.\nPindahkan data-dir keluar dulu (default: ~/xerj-data).".to_string())));
+                        let _ = tx.send(TaskEvent::Done(Err("Cancelled for safety: the XERJ data folder is INSIDE the folder you want to index.\nMove the data dir elsewhere first (default: ~/xerj-data).".to_string())));
                         return;
                     }
                 }
@@ -753,7 +753,7 @@ fn stream_xerj(
     let code = child.wait().ok().and_then(|s| s.code()).unwrap_or(-1);
     if code != 0 {
         let _ = tx.send(TaskEvent::Done(Err(format!(
-            "Perintah gagal (kode {}).\n\nPastikan server XERJ jalan (menu 'Start server').\n\n{}",
+            "Command failed (code {}).\n\nMake sure the XERJ server is running ('Start server' menu).\n\n{}",
             code,
             collected.trim()
         ))));
@@ -761,7 +761,7 @@ fn stream_xerj(
     }
     match finish(collected.trim().to_string()) {
         Ok(msg) => {
-            let body = if msg == "Indexing selesai." && !collected.trim().is_empty() {
+            let body = if msg == "Indexing complete." && !collected.trim().is_empty() {
                 collected.trim().to_string()
             } else {
                 msg
@@ -805,7 +805,7 @@ fn build_menu(st: &core::MenuStatus) -> Vec<MenuItem> {
         items.push(MenuItem {
             key: '1',
             label: format!(
-                "Install XERJ   [v{} terinstall]",
+                "Install XERJ   [v{} installed]",
                 st.version.as_deref().unwrap_or("?")
             ),
             enabled: false,
@@ -822,7 +822,7 @@ fn build_menu(st: &core::MenuStatus) -> Vec<MenuItem> {
     if !st.installed {
         items.push(MenuItem {
             key: '2',
-            label: "Start server   (install XERJ dulu)".into(),
+            label: "Start server   (install XERJ first)".into(),
             enabled: false,
             action: Action::ToggleServer,
         });
@@ -849,7 +849,7 @@ fn build_menu(st: &core::MenuStatus) -> Vec<MenuItem> {
         if ok {
             String::new()
         } else {
-            "   (butuh XERJ + server jalan)".to_string()
+            "   (needs XERJ + running server)".to_string()
         }
     };
     items.push(MenuItem {
@@ -861,11 +861,11 @@ fn build_menu(st: &core::MenuStatus) -> Vec<MenuItem> {
     items.push(MenuItem {
         key: '4',
         label: format!(
-            "Init project untuk AI agent{}",
+            "Init project for AI agent{}",
             if st.installed {
                 String::new()
             } else {
-                "   (butuh XERJ)".to_string()
+                "   (needs XERJ)".to_string()
             }
         ),
         enabled: st.installed,
@@ -873,7 +873,7 @@ fn build_menu(st: &core::MenuStatus) -> Vec<MenuItem> {
     });
     items.push(MenuItem {
         key: '5',
-        label: format!("Cari kode{}", tag(need_server)),
+        label: format!("Search code{}", tag(need_server)),
         enabled: need_server,
         action: Action::Search,
     });
@@ -885,15 +885,15 @@ fn build_menu(st: &core::MenuStatus) -> Vec<MenuItem> {
     });
     items.push(MenuItem {
         key: '7',
-        label: format!("Statistik (xerj gain){}", tag(need_server)),
+        label: format!("Statistics (xerj gain){}", tag(need_server)),
         enabled: need_server,
         action: Action::Gain,
     });
     if st.is_macos {
         let label = if st.autostart {
-            "Auto-start saat login   [AKTIF]"
+            "Auto-start at login   [ON]"
         } else {
-            "Auto-start saat login   [MATI]"
+            "Auto-start at login   [OFF]"
         };
         items.push(MenuItem {
             key: '8',
@@ -904,7 +904,7 @@ fn build_menu(st: &core::MenuStatus) -> Vec<MenuItem> {
     } else {
         items.push(MenuItem {
             key: '8',
-            label: "Auto-start saat login   (hanya macOS)".into(),
+            label: "Auto-start at login   (macOS only)".into(),
             enabled: false,
             action: Action::Autostart,
         });
@@ -912,11 +912,11 @@ fn build_menu(st: &core::MenuStatus) -> Vec<MenuItem> {
     items.push(MenuItem {
         key: '0',
         label: format!(
-            "Kirim field report ke komunitas XERJ{}",
+            "Send field report to the XERJ community{}",
             if st.installed {
                 String::new()
             } else {
-                "   (butuh XERJ)".to_string()
+                "   (needs XERJ)".to_string()
             }
         ),
         enabled: st.installed,
@@ -924,7 +924,7 @@ fn build_menu(st: &core::MenuStatus) -> Vec<MenuItem> {
     });
     items.push(MenuItem {
         key: '9',
-        label: "Keluar".into(),
+        label: "Quit".into(),
         enabled: true,
         action: Action::Quit,
     });
@@ -1011,42 +1011,42 @@ mod tests {
 
     #[test]
     fn confirm_summaries_are_honest() {
-        // Install: sebut installer resmi, janji tidak mengubah project.
+        // Install: names the official installer, promises not to touch the project.
         let s = joined(&PendingAction::Install);
         assert!(s.contains("https://xerj.org/get"));
-        assert!(s.contains("Tidak mengubah file project"));
+        assert!(s.contains("Does not touch any project files"));
 
-        // Start server: jelaskan --insecure dengan jujur.
+        // Start server: explains --insecure honestly.
         let s = joined(&PendingAction::StartServer);
         assert!(s.contains("--insecure"));
-        assert!(s.contains("TANPA TLS"));
+        assert!(s.contains("NO TLS"));
         assert!(s.contains("127.0.0.1"));
 
-        // Stop: tegaskan data tetap utuh.
+        // Stop: asserts data stays intact.
         let s = joined(&PendingAction::StopServer(Some(123)));
         assert!(s.contains("123"));
-        assert!(s.contains("TETAP UTUH"));
+        assert!(s.contains("REMAIN INTACT"));
 
-        // Autoindex: read-only terhadap project.
+        // Autoindex: read-only against the project.
         let s = joined(&PendingAction::Autoindex("/tmp/proj".into()));
         assert!(s.contains("/tmp/proj"));
-        assert!(s.contains("hanya DIBACA"));
+        assert!(s.contains("only READ"));
 
-        // Init: sebut file yang ditulis + backup .bak.
+        // Init: names written files + .bak backup.
         let s = joined(&PendingAction::InitProject("/tmp/proj".into()));
         assert!(s.contains(".mcp.json"));
         assert!(s.contains("AGENTS.md"));
         assert!(s.contains(".mcp.json.bak"));
         assert!(s.contains("/tmp/proj"));
 
-        // Autostart: sebut file plist milik TUI.
+        // Autostart: names the TUI-owned plist file.
         let s = joined(&PendingAction::Autostart(true));
         assert!(s.contains("org.xerj.tui.plist"));
 
-        // Feedback: jujur bahwa ini bukan kewajiban hukum.
+        // Feedback: honest that this is not a legal obligation.
         let s = joined(&PendingAction::Feedback);
         assert!(s.contains("--dry-run"));
-        assert!(s.contains("BUKAN kewajiban hukum"));
+        assert!(s.contains("NOT a legal obligation"));
     }
 
     #[test]
@@ -1065,7 +1065,7 @@ mod tests {
             assert!(!a.title().is_empty());
             assert!(
                 a.summary_lines().len() >= 4,
-                "ringkasan {:?} terlalu pendek",
+                "summary {:?} too short",
                 a.title()
             );
         }

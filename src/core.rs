@@ -163,7 +163,7 @@ fn http_get(url: &str, api_key: Option<&str>) -> Result<(u16, String), String> {
             let body = resp.into_string().unwrap_or_default();
             Ok((code, body))
         }
-        Err(e) => Err(format!("tidak bisa menghubungi {}: {}", url, e)),
+        Err(e) => Err(format!("cannot reach {}: {}", url, e)),
     }
 }
 
@@ -184,7 +184,7 @@ fn http_post_json(url: &str, body: &str, api_key: Option<&str>) -> Result<(u16, 
             let text = resp.into_string().unwrap_or_default();
             Ok((code, text))
         }
-        Err(e) => Err(format!("tidak bisa menghubungi {}: {}", url, e)),
+        Err(e) => Err(format!("cannot reach {}: {}", url, e)),
     }
 }
 
@@ -360,7 +360,7 @@ pub fn read_state(path: &Path) -> ServerState {
 
 fn write_state(path: &Path, data_dir: &Path, pid: u32, insecure: bool) -> Result<(), String> {
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(|e| format!("gagal membuat folder: {}", e))?;
+        fs::create_dir_all(parent).map_err(|e| format!("failed to create folder: {}", e))?;
     }
     let json = format!(
         "{{\"data_dir\":{},\"pid\":{},\"insecure\":{}}}",
@@ -368,7 +368,7 @@ fn write_state(path: &Path, data_dir: &Path, pid: u32, insecure: bool) -> Result
         pid,
         insecure
     );
-    fs::write(path, json).map_err(|e| format!("gagal menulis state: {}", e))?;
+    fs::write(path, json).map_err(|e| format!("failed to write state: {}", e))?;
     Ok(())
 }
 
@@ -394,7 +394,7 @@ pub fn start_server_with(
     health_url: &str,
 ) -> Result<u32, String> {
     let xerj = find_xerj().ok_or_else(|| {
-        "XERJ belum terinstall. Pilih menu 'Install XERJ' dulu ya.".to_string()
+        "XERJ is not installed. Use the 'Install XERJ' menu first.".to_string()
     })?;
 
     let st = server_status_with(pid_file, health_url);
@@ -402,14 +402,14 @@ pub fn start_server_with(
         if let Some(pid) = ensure_pid_recorded(pid_file, health_url) {
             return Ok(pid);
         }
-        return Err("Server XERJ sudah jalan, tapi PID-nya tidak bisa dipastikan \
-                    (kemungkinan dijalankan di luar TUI).\nHentikan manual lalu start dari TUI ya."
+        return Err("The XERJ server is already running, but its PID cannot be confirmed \
+                    (probably started outside the TUI).\nStop it manually, then start it from the TUI."
             .into());
     }
 
-    fs::create_dir_all(data_dir).map_err(|e| format!("gagal membuat data-dir: {}", e))?;
+    fs::create_dir_all(data_dir).map_err(|e| format!("failed to create data dir: {}", e))?;
     if let Some(parent) = pid_file.parent() {
-        fs::create_dir_all(parent).map_err(|e| format!("gagal membuat folder: {}", e))?;
+        fs::create_dir_all(parent).map_err(|e| format!("failed to create folder: {}", e))?;
     }
     let _ = fs::remove_file(pid_file); // bersihkan PID basi
     if let Some(parent) = log_path.parent() {
@@ -419,8 +419,8 @@ pub fn start_server_with(
         .create(true)
         .append(true)
         .open(log_path)
-        .map_err(|e| format!("gagal membuka log: {}", e))?;
-    let log2 = log.try_clone().map_err(|e| format!("gagal duplikat log: {}", e))?;
+        .map_err(|e| format!("failed to open log: {}", e))?;
+    let log2 = log.try_clone().map_err(|e| format!("failed to duplicate log: {}", e))?;
 
     let mut cmd = Command::new(&xerj);
     cmd.args(["--insecure", "--data-dir"])
@@ -433,7 +433,7 @@ pub fn start_server_with(
         use std::os::unix::process::CommandExt;
         cmd.process_group(0); // lepas dari grup proses terminal
     }
-    let mut child = cmd.spawn().map_err(|e| format!("gagal menjalankan xerj: {}", e))?;
+    let mut child = cmd.spawn().map_err(|e| format!("failed to run xerj: {}", e))?;
     let pid = child.id();
     // Thread reaper: wait() agar tidak jadi zombie saat server berhenti.
     // Server tetap jalan mandiri (tidak di-kill saat TUI keluar).
@@ -441,7 +441,7 @@ pub fn start_server_with(
         let _ = child.wait();
     });
 
-    fs::write(pid_file, pid.to_string()).map_err(|e| format!("gagal mencatat PID: {}", e))?;
+    fs::write(pid_file, pid.to_string()).map_err(|e| format!("failed to record PID: {}", e))?;
     write_state(state_file, data_dir, pid, true)?;
 
     let deadline = Instant::now() + Duration::from_secs(25);
@@ -449,7 +449,7 @@ pub fn start_server_with(
         if !pid_alive(pid) {
             let _ = fs::remove_file(pid_file);
             return Err(format!(
-                "Server XERJ langsung mati setelah dijalankan.\nIntip log-nya di: {}",
+                "The XERJ server died right after starting.\nCheck the log at: {}",
                 log_path.display()
             ));
         }
@@ -461,7 +461,7 @@ pub fn start_server_with(
         }
         std::thread::sleep(Duration::from_millis(500));
     }
-    Err("Server XERJ tidak merespons health check dalam 25 detik.\nCoba 'Stop server' lalu 'Start server' lagi ya.".into())
+    Err("The XERJ server did not respond to the health check within 25 seconds.\nTry 'Stop server' then 'Start server' again.".into())
 }
 
 pub fn start_server(data_dir: &Path) -> Result<u32, String> {
@@ -483,7 +483,7 @@ pub fn stop_server_with(pid_file: &Path) -> Result<String, String> {
                 Some(p) => p,
                 None => {
                     let _ = fs::remove_file(pid_file);
-                    return Ok("Tidak ada server XERJ yang berjalan.".into());
+                    return Ok("No XERJ server is running.".into());
                 }
             }
         }
@@ -505,11 +505,11 @@ pub fn stop_server_with(pid_file: &Path) -> Result<String, String> {
     let _ = fs::remove_file(pid_file);
     if pid_alive(pid) {
         return Err(format!(
-            "Server (PID {}) bandel, tidak mau berhenti. Coba 'kill -9 {}' manual ya.",
+            "Server (PID {}) refuses to stop. Try 'kill -9 {}' manually.",
             pid, pid
         ));
     }
-    Ok(format!("Server berhenti (PID {}). Sampai jumpa lagi!", pid))
+    Ok(format!("Server stopped (PID {}). Bye for now!", pid))
 }
 
 pub fn stop_server() -> Result<String, String> {
@@ -521,7 +521,7 @@ pub fn stop_server() -> Result<String, String> {
 /// Jalankan `xerj <args>` dengan timeout. Kembalikan (exit_code, output).
 pub fn run_xerj(args: &[&str], cwd: Option<&Path>, timeout: Duration) -> Result<(i32, String), String> {
     let xerj = find_xerj().ok_or_else(|| {
-        "XERJ belum terinstall. Pilih menu 'Install XERJ' dulu ya.".to_string()
+        "XERJ is not installed. Use the 'Install XERJ' menu first.".to_string()
     })?;
     let mut cmd = Command::new(&xerj);
     cmd.args(args)
@@ -531,7 +531,7 @@ pub fn run_xerj(args: &[&str], cwd: Option<&Path>, timeout: Duration) -> Result<
     if let Some(dir) = cwd {
         cmd.current_dir(dir);
     }
-    let mut child = cmd.spawn().map_err(|e| format!("gagal menjalankan xerj: {}", e))?;
+    let mut child = cmd.spawn().map_err(|e| format!("failed to run xerj: {}", e))?;
 
     let mut out_h = child.stdout.take();
     let mut err_h = child.stderr.take();
@@ -552,12 +552,12 @@ pub fn run_xerj(args: &[&str], cwd: Option<&Path>, timeout: Duration) -> Result<
 
     let start = Instant::now();
     let status = loop {
-        match child.try_wait().map_err(|e| format!("gagal menunggu xerj: {}", e))? {
+        match child.try_wait().map_err(|e| format!("failed while waiting for xerj: {}", e))? {
             Some(st) => break st,
             None => {
                 if start.elapsed() > timeout {
                     let _ = child.kill();
-                    return Err("Perintahnya kelamaan dan di-timeout. Coba lagi ya.".into());
+                    return Err("The command timed out. Please try again.".into());
                 }
                 std::thread::sleep(Duration::from_millis(100));
             }
@@ -580,7 +580,7 @@ pub struct XerjProc {
 
 pub fn spawn_xerj(args: &[String], cwd: Option<&Path>) -> Result<XerjProc, String> {
     let xerj = find_xerj().ok_or_else(|| {
-        "XERJ belum terinstall. Pilih menu 'Install XERJ' dulu ya.".to_string()
+        "XERJ is not installed. Use the 'Install XERJ' menu first.".to_string()
     })?;
     let mut cmd = Command::new(&xerj);
     cmd.args(args)
@@ -590,8 +590,8 @@ pub fn spawn_xerj(args: &[String], cwd: Option<&Path>) -> Result<XerjProc, Strin
     if let Some(dir) = cwd {
         cmd.current_dir(dir);
     }
-    let mut child = cmd.spawn().map_err(|e| format!("gagal menjalankan xerj: {}", e))?;
-    let stdout = child.stdout.take().ok_or("gagal mengambil stdout")?;
+    let mut child = cmd.spawn().map_err(|e| format!("failed to run xerj: {}", e))?;
+    let stdout = child.stdout.take().ok_or("failed to capture stdout")?;
     Ok(XerjProc {
         child,
         stdout: std::io::BufReader::new(stdout),
@@ -603,14 +603,14 @@ pub fn spawn_xerj(args: &[String], cwd: Option<&Path>) -> Result<XerjProc, Strin
 pub fn validate_folder(path: &str) -> Result<PathBuf, String> {
     let p = shellexpand(path);
     if p.trim().is_empty() {
-        return Err("Path-nya kosong. Coba paste lagi ya.".into());
+        return Err("Path is empty. Please paste it again.".into());
     }
     let p = PathBuf::from(p.trim());
     if !p.exists() {
-        return Err(format!("Folder tidak ketemu: {}\nCek lagi path-nya ya.", p.display()));
+        return Err(format!("Folder not found: {}\nPlease check the path.", p.display()));
     }
     if !p.is_dir() {
-        return Err(format!("Ini file, bukan folder: {}", p.display()));
+        return Err(format!("This is a file, not a folder: {}", p.display()));
     }
     Ok(p.canonicalize().unwrap_or(p))
 }
@@ -679,7 +679,7 @@ pub fn autoindex(folder: &str, data_dir: &Path) -> Result<String, String> {
     let (code, out) = run_xerj(&["autoindex", &folder_s], None, Duration::from_secs(1800))?;
     if code != 0 {
         return Err(format!(
-            "Indexing gagal (kode keluar {}).\n\n{}\n\nPastikan server XERJ jalan (menu 'Start server'), lalu coba lagi.",
+            "Indexing failed (exit code {}).\n\n{}\n\nMake sure the XERJ server is running ('Start server' menu), then try again.",
             code, out
         ));
     }
@@ -694,11 +694,11 @@ pub fn init_project(folder: &str) -> Result<String, String> {
     let folder = validate_folder(folder)?;
     let (code, out) = run_xerj(&["init"], Some(&folder), Duration::from_secs(120))?;
     if code != 0 {
-        return Err(format!("Init gagal (kode keluar {}).\n\n{}", code, out));
+        return Err(format!("Init failed (exit code {}).\n\n{}", code, out));
     }
     let mut msg = if out.is_empty() { "Init selesai.".into() } else { out };
     msg.push_str(
-        "\n\nFile .mcp.json + skill sudah ditulis di folder project.\nBuka project itu dengan AI agent kamu, dan dia bisa memakai XERJ.",
+        "\n\n.mcp.json + skill files have been written to the project folder.\nOpen that project with your AI agent, and it can use XERJ.",
     );
     Ok(msg)
 }
@@ -706,17 +706,17 @@ pub fn init_project(folder: &str) -> Result<String, String> {
 pub fn search_code(query: &str) -> Result<String, String> {
     let q = query.trim();
     if q.is_empty() {
-        return Err("Query-nya kosong. Tulis dulu yang mau dicari ya.".into());
+        return Err("Query is empty. Type what to search for first.".into());
     }
     let (code, out) = run_xerj(&["search", q], None, Duration::from_secs(120))?;
     if code != 0 {
         return Err(format!(
-            "Pencarian gagal. Pastikan server XERJ jalan (menu 'Start server').\n\n{}",
+            "Search failed. Make sure the XERJ server is running ('Start server' menu).\n\n{}",
             out
         ));
     }
     Ok(if out.is_empty() {
-        "(tidak ada hasil)".into()
+        "(no results)".into()
     } else {
         out
     })
@@ -725,17 +725,17 @@ pub fn search_code(query: &str) -> Result<String, String> {
 pub fn def_symbol(symbol: &str) -> Result<String, String> {
     let s = symbol.trim();
     if s.is_empty() {
-        return Err("Nama simbolnya kosong. Tulis dulu ya, mis. nama_fungsi.".into());
+        return Err("Symbol name is empty. Type it first, e.g. function_name.".into());
     }
     let (code, out) = run_xerj(&["def", s], None, Duration::from_secs(120))?;
     if code != 0 {
         return Err(format!(
-            "Go-to-definition gagal. Pastikan server XERJ jalan.\n\n{}",
+            "Go-to-definition failed. Make sure the XERJ server is running.\n\n{}",
             out
         ));
     }
     Ok(if out.is_empty() {
-        "(simbol tidak ketemu)".into()
+        "(symbol not found)".into()
     } else {
         out
     })
@@ -744,10 +744,10 @@ pub fn def_symbol(symbol: &str) -> Result<String, String> {
 pub fn gain_stats() -> Result<String, String> {
     let (code, out) = run_xerj(&["gain"], None, Duration::from_secs(60))?;
     if code != 0 {
-        return Err(format!("Gagal membaca statistik.\n\n{}", out));
+        return Err(format!("Failed to read statistics.\n\n{}", out));
     }
     Ok(if out.is_empty() {
-        "(belum ada statistik)".into()
+        "(no statistics yet)".into()
     } else {
         out
     })
@@ -758,10 +758,10 @@ pub fn gain_stats() -> Result<String, String> {
 pub fn feedback_dry_run() -> Result<String, String> {
     let (code, out) = run_xerj(&["feedback", "--dry-run"], None, Duration::from_secs(60))?;
     if code != 0 {
-        return Err(format!("Gagal membuat draf field report.\n\n{}", out));
+        return Err(format!("Failed to draft the field report.\n\n{}", out));
     }
     Ok(if out.is_empty() {
-        "(tidak ada output)".into()
+        "(no output)".into()
     } else {
         out
     })
@@ -775,14 +775,14 @@ pub fn install_cmd() -> String {
 
 pub fn install_xerj_blocking() -> Result<String, String> {
     if find_in_path("curl").is_none() {
-        return Err("Perintah 'curl' tidak ketemu di sistem kamu. Install curl dulu ya.".into());
+        return Err("The 'curl' command was not found on your system. Please install curl first.".into());
     }
     let cmd = install_cmd();
     let out = Command::new("sh")
         .args(["-c", &cmd])
         .stdin(Stdio::null())
         .output()
-        .map_err(|e| format!("gagal menjalankan installer: {}", e))?;
+        .map_err(|e| format!("failed to run installer: {}", e))?;
     let mut text = String::from_utf8_lossy(&out.stdout).into_owned();
     let err = String::from_utf8_lossy(&out.stderr);
     if !err.trim().is_empty() {
@@ -791,7 +791,7 @@ pub fn install_xerj_blocking() -> Result<String, String> {
     }
     if !out.status.success() {
         return Err(format!(
-            "Installer gagal (kode {}).\n\n{}\n\nCek koneksi internet lalu coba lagi.",
+            "Installer failed (code {}).\n\n{}\n\nCheck your internet connection and try again.",
             out.status.code().unwrap_or(-1),
             text.trim()
         ));
@@ -908,7 +908,7 @@ pub fn status_card() -> StatusCard {
     };
 
     let note = if st.running() && data_dir.is_none() {
-        Some("server tampaknya dijalankan di luar TUI (data-dir tidak diketahui)".into())
+        Some("server seems to run outside the TUI (data dir unknown)".into())
     } else {
         None
     };
@@ -1000,7 +1000,7 @@ pub fn autostart_enabled() -> bool {
 #[cfg(not(target_os = "macos"))]
 pub fn set_autostart(enable: bool) -> Result<String, String> {
     let _ = enable;
-    Err("Auto-start saat ini hanya didukung di macOS.\nDi Linux: belum didukung. Jalankan server manual dari menu 'Start server' ya.".into())
+    Err("Auto-start is currently only supported on macOS.\nOn Linux: not supported. Start the server manually from the 'Start server' menu.".into())
 }
 
 #[cfg(target_os = "macos")]
@@ -1009,15 +1009,15 @@ pub fn set_autostart(enable: bool) -> Result<String, String> {
         let path = launch_agent_path();
         if enable {
             let xerj = find_xerj().ok_or_else(|| {
-                "Install XERJ dulu sebelum mengaktifkan auto-start.".to_string()
+                "Install XERJ before enabling auto-start.".to_string()
             })?;
             let data_dir = default_data_dir();
-            std::fs::create_dir_all(app_dir()).map_err(|e| format!("gagal membuat folder: {}", e))?;
+            std::fs::create_dir_all(app_dir()).map_err(|e| format!("failed to create folder: {}", e))?;
             if let Some(parent) = path.parent() {
-                std::fs::create_dir_all(parent).map_err(|e| format!("gagal membuat folder: {}", e))?;
+                std::fs::create_dir_all(parent).map_err(|e| format!("failed to create folder: {}", e))?;
             }
             std::fs::write(&path, build_plist(&xerj, &data_dir, &server_log()))
-                .map_err(|e| format!("gagal menulis plist: {}", e))?;
+                .map_err(|e| format!("failed to write plist: {}", e))?;
             let rc = Command::new("launchctl")
                 .args(["load", "-w"])
                 .arg(&path)
@@ -1025,16 +1025,16 @@ pub fn set_autostart(enable: bool) -> Result<String, String> {
                 .map(|o| o.status.code().unwrap_or(-1))
                 .unwrap_or(-1);
             if rc != 0 {
-                return Err("File auto-start sudah ditulis, tapi 'launchctl load' gagal.\nCoba restart Mac kamu. Biasanya langsung aktif setelah itu.".into());
+                return Err("The auto-start file was written, but 'launchctl load' failed.\nTry restarting your Mac. It usually activates right after that.".into());
             }
             Ok(format!(
-                "Auto-start AKTIF. Server XERJ akan jalan sendiri tiap kamu login.\nFile: {}",
+                "Auto-start ON. The XERJ server will start on its own at each login.\nFile: {}",
                 path.display()
             ))
         } else {
             let _ = Command::new("launchctl").args(["unload"]).arg(&path).output();
             let _ = std::fs::remove_file(&path);
-            Ok("Auto-start MATI. Server tidak akan jalan otomatis lagi.".into())
+            Ok("Auto-start OFF. The server will no longer start automatically.".into())
         }
     }
 }
@@ -1079,7 +1079,7 @@ mod tests {
     fn validate_folder_rejects_missing() {
         let r = validate_folder("/jalan/yang/pasti/tidak/ada/xyz123");
         assert!(r.is_err());
-        assert!(r.unwrap_err().contains("tidak ketemu"));
+        assert!(r.unwrap_err().contains("not found"));
     }
 
     #[test]
@@ -1099,7 +1099,7 @@ mod tests {
         fs::write(&p, "x").unwrap();
         let r = validate_folder(p.to_str().unwrap());
         assert!(r.is_err());
-        assert!(r.unwrap_err().contains("bukan folder"));
+        assert!(r.unwrap_err().contains("not a folder"));
         let _ = fs::remove_file(&p);
     }
 

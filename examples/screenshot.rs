@@ -10,7 +10,7 @@ fn main() {
     let mut terminal = Terminal::new(backend).unwrap();
     terminal
         .draw(|f| ui::render(f, &mut app))
-        .expect("render gagal");
+        .expect("render failed");
     let buf = terminal.backend().buffer();
     for y in 0..24 {
         let mut line = String::new();

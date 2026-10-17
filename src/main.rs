@@ -14,26 +14,26 @@ use xerj_tui::ui;
 
 fn main() {
     if let Err(e) = run() {
-        eprintln!("xerj-tui gagal: {}", e);
+        eprintln!("xerj-tui failed: {}", e);
         std::process::exit(1);
     }
 }
 
 fn run() -> Result<(), String> {
-    enable_raw_mode().map_err(|e| format!("gagal masuk mode terminal: {}", e))?;
+    enable_raw_mode().map_err(|e| format!("failed to enter terminal mode: {}", e))?;
     let mut stdout = std::io::stdout();
     execute!(stdout, EnterAlternateScreen)
-        .map_err(|e| format!("gagal buka layar: {}", e))?;
+        .map_err(|e| format!("failed to open screen: {}", e))?;
     let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend).map_err(|e| format!("gagal init terminal: {}", e))?;
+    let mut terminal = Terminal::new(backend).map_err(|e| format!("failed to init terminal: {}", e))?;
 
     let mut app = App::new();
     let result = event_loop(&mut terminal, &mut app);
 
-    disable_raw_mode().map_err(|e| format!("gagal keluar mode terminal: {}", e))?;
+    disable_raw_mode().map_err(|e| format!("failed to leave terminal mode: {}", e))?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)
-        .map_err(|e| format!("gagal tutup layar: {}", e))?;
-    terminal.show_cursor().map_err(|e| format!("gagal tampilkan kursor: {}", e))?;
+        .map_err(|e| format!("failed to close screen: {}", e))?;
+    terminal.show_cursor().map_err(|e| format!("failed to show cursor: {}", e))?;
 
     result
 }
@@ -45,7 +45,7 @@ fn event_loop(
     loop {
         terminal
             .draw(|f| ui::render(f, app))
-            .map_err(|e| format!("gagal menggambar: {}", e))?;
+            .map_err(|e| format!("failed to draw: {}", e))?;
 
         if event::poll(Duration::from_millis(120)).map_err(|e| format!("event: {}", e))? {
             if let Event::Key(key) = event::read().map_err(|e| format!("event: {}", e))? {
