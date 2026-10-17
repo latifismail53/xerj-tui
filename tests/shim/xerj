@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Fake `xerj` untuk integration test.
+# Meniru perilaku yang dipakai core, TANPA install XERJ asli.
+set -u
+case "${1:-}" in
+  --version)
+    # Format persis seperti aslinya: "xerj v<versi>"
+    echo "xerj v9.9.9-test"
+    ;;
+  --insecure)
+    # Berpura-pura jadi server: proses tetap hidup supaya PID valid.
+    exec sleep 600
+    ;;
+  autoindex)
+    echo "xerj-done ok=true exit=0 reason=completed wall=0.1s files=1 records=2 datasets=1"
+    ;;
+  init)
+    echo "init OK: .mcp.json + skill ditulis"
+    touch .mcp.json
+    ;;
+  search)
+    echo "hasil search untuk: $2"
+    echo "src/a.php:1 potongan kode yang cocok..."
+    ;;
+  def)
+    echo "definisi $2 -> src/a.php:1 (function $2)"
+    ;;
+  gain)
+    echo "gain: 3 searches, hit rate 100%"
+    ;;
+  feedback)
+    echo "field report draft (dry-run): nothing sent"
+    ;;
+  *)
+    echo "shim: perintah tak dikenal: ${1:-<kosong>}" >&2
+    exit 1
+    ;;
+esac
