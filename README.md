@@ -50,6 +50,14 @@ cargo build --release
 
 Requires macOS or Linux, and a terminal at least 80x24.
 
+## Uninstall
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/latifismail53/xerj-tui/main/uninstall.sh | sh
+```
+
+This stops the server (if the TUI started it) and removes the `xerj-tui` binary plus `~/.xerj-tui/`. XERJ itself and your data in `~/xerj-data` are left untouched.
+
 ## Usage
 
 1. **Install XERJ** (menu 1) — runs the official installer.
